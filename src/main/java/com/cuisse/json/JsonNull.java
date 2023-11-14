@@ -3,7 +3,7 @@ package com.cuisse.json;
 /**
  * @author Brayan Roman
  */
-public record Null() implements JsonValue {
+public record JsonNull() implements JsonValue {
 
     @Override
     public JsonType type() {

@@ -43,7 +43,7 @@ public class Parser {
             case FALSE, TRUE -> new JsonBoolean(token.value().equals("true"));
             case INTEGRAL    -> parseIntegral(token);
             case DECIMAL     -> parseDecimal(token);
-            case NULL        -> new Null();
+            case NULL        -> new JsonNull();
             default          -> throw new ParsingException("Unexpected token: " + token.kind());
         };
     }
