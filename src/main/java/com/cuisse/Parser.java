@@ -27,7 +27,7 @@ public class Parser {
             if (lexer.peek().kind() == TokenKind.ARRAY_OPEN || lexer.peek().kind() == TokenKind.OBJECT_OPEN) {
                 return parse(lexer.consume());
             } else {
-                throw new ParsingException("Json cannot start with: " + lexer.peek().kind(), null);
+                throw new ParsingException("Json cannot start with: " + lexer.peek().kind());
             }
         } finally {
             lexer.dispose();
@@ -44,7 +44,7 @@ public class Parser {
             case INTEGRAL    -> parseIntegral(token);
             case DECIMAL     -> parseFloating(token);
             case NULL        -> new Null();
-            default          -> throw new ParsingException("Unexpected token: " + token.kind(), null);
+            default          -> throw new ParsingException("Unexpected token: " + token.kind());
         };
     }
 
@@ -54,7 +54,7 @@ public class Parser {
             if (lexer.peek().kind() != TokenKind.OBJECT_CLOSE) {
                 Token key = consume(TokenKind.STRING);
                 if (object.containsKey(key.value())) {
-                    throw new ParsingException("Duplicated key " + key.value() + " in object.", null);
+                    throw new ParsingException("Duplicated key " + key.value() + " in object.");
                 }
                 consume(TokenKind.COLON);
                 if (lexer.peek().kind().valuable()) {
@@ -65,7 +65,7 @@ public class Parser {
                         break;
                     }
                 } else {
-                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in object.", null);
+                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in object.");
                 }
             } else {
                 break;
@@ -87,7 +87,7 @@ public class Parser {
                         break;
                     }
                 } else {
-                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in array.", null);
+                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in array.");
                 }
             } else {
                 break;
@@ -115,7 +115,7 @@ public class Parser {
 
     private Token consume(TokenKind kind) {
         if (lexer.peek().kind() != kind) {
-            throw new ParsingException("Expecting " + kind + " but got " + lexer.peek().kind() + " at " + lexer.line() + ":" + lexer.offset(), null);
+            throw new ParsingException("Expecting " + kind + " but got " + lexer.peek().kind() + " at " + lexer.line() + ":" + lexer.offset());
         } else {
             return lexer.consume();
         }
