@@ -1,4 +1,4 @@
-package com.cuisse;
+package com.cuisse.json;
 
 import java.io.InputStream;
 
@@ -42,7 +42,7 @@ public class Parser {
             case ARRAY_OPEN  -> parseArray();
             case FALSE, TRUE -> new JsonBoolean(token.value().equals("true"));
             case INTEGRAL    -> parseIntegral(token);
-            case DECIMAL     -> parseFloating(token);
+            case DECIMAL     -> parseDecimal(token);
             case NULL        -> new Null();
             default          -> throw new ParsingException("Unexpected token: " + token.kind());
         };
@@ -105,11 +105,11 @@ public class Parser {
         }
     }
 
-    private JsonDecimal parseFloating(Token token) {
+    private JsonDecimal parseDecimal(Token token) {
         try {
             return new JsonDecimal(Double.parseDouble(token.value()));
         } catch (NumberFormatException error) {
-            throw new ParsingException("Malformed floating value: " + token.value(), error);
+            throw new ParsingException("Malformed decimal value: " + token.value(), error);
         }
     }
 

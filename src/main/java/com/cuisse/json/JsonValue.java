@@ -1,4 +1,4 @@
-package com.cuisse;
+package com.cuisse.json;
 
 /**
  * @author Brayan Roman
@@ -11,6 +11,16 @@ public interface JsonValue {
      * @return This value type.
      */
     JsonType type();
+
+    /**
+     * Check whether or not this value match the expected type.
+     *
+     * @param type The expected type.
+     * @return     true if the the type match this value, otherwise false.
+     */
+    default boolean is(JsonType type) {
+        return type().equals(type);
+    }
 
     /**
      * Get this value as a JsonArray.
@@ -38,11 +48,7 @@ public interface JsonValue {
      * @return The string value. If this value if not a JsonString instance, the method 'toString' will be returned instead.
      */
     default String string() {
-        if (this instanceof JsonString string) {
-            return string.value();
-        } else {
-            return toString();
-        }
+        return (this instanceof JsonString string) ? string.value() : toString();
     }
 
     /**
@@ -81,8 +87,8 @@ public interface JsonValue {
      */
     default boolean bool() {
         return switch (this) {
-            case JsonBoolean bool      -> bool.value();
-            case JsonDecimal decimal   -> Double.compare(decimal.value(), 1) == 0;
+            case JsonBoolean  bool     -> bool.value();
+            case JsonDecimal  decimal  -> Double.compare(decimal.value(), 1) == 0;
             case JsonIntegral integral -> integral.value() == 1;
             default                    -> throw new ClassCastException("Cannot cast " + getClass() + " to boolean.");
         };
