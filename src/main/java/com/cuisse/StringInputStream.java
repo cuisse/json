@@ -1,8 +1,10 @@
 package com.cuisse;
 
-import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * @author Brayan Roman
+ */
 public class StringInputStream extends InputStream {
 
     private final String input;
@@ -10,10 +12,14 @@ public class StringInputStream extends InputStream {
 
     public StringInputStream(String input) {
         if (input == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("input == null");
         } else {
             this.input = input;
         }
+    }
+
+    public int length() {
+        return input.length();
     }
 
     @Override

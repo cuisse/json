@@ -1,17 +1,20 @@
 package com.cuisse;
 
+/**
+ * @author Brayan Roman
+ */
 public enum TokenKind {
     OBJECT_OPEN,  // {
     OBJECT_CLOSE, // }
-    STRING,       // ""
+    STRING,       // "
     COLON,        // :
     ARRAY_OPEN,   // [
     ARRAY_CLOSE,  // ]
     COMMA,        // ,
     FALSE,        // false
     TRUE,         // true
-    INTEGRAL,     // 0
-    FLOATING,     // 0.0
+    INTEGRAL,     // -, 0..9
+    DECIMAL,      // -, +, ., 0..9, e, E
     NULL,         // null
     EOF;          // end of the file
 
@@ -22,7 +25,7 @@ public enum TokenKind {
                this == FALSE       ||
                this == TRUE        ||
                this == INTEGRAL    ||
-               this == FLOATING    ||
+               this == DECIMAL     ||
                this == NULL;
     }
 

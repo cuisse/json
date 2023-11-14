@@ -2,9 +2,12 @@ package com.cuisse;
 
 import java.io.InputStream;
 
+/**
+ * @author Brayan Roman
+ */
 public class Parser {
 
-    private final Lexer lexer;
+    private Lexer lexer;
 
     public Parser(String input) {
         this.lexer = new Lexer(new StringInputStream(input));
@@ -14,96 +17,105 @@ public class Parser {
         this.lexer = new Lexer(stream);
     }
 
-    public Element parse() {
-        Token token = lexer.token();
-        if (token.kind() == TokenKind.ARRAY_OPEN || token.kind() == TokenKind.OBJECT_OPEN) {
-            return parse(lexer.consume());
-        } else {
-            throw new ParsingException("Json cannot start with: " + lexer.token().kind(), null);
+    /**
+     * Parses the json value.
+     *
+     * @return The parsed json value.
+     */
+    public JsonValue parse() {
+        try {
+            if (lexer.peek().kind() == TokenKind.ARRAY_OPEN || lexer.peek().kind() == TokenKind.OBJECT_OPEN) {
+                return parse(lexer.consume());
+            } else {
+                throw new ParsingException("Json cannot start with: " + lexer.peek().kind(), null);
+            }
+        } finally {
+            lexer.dispose();
+            lexer = null;
         }
     }
 
-    private Element parse(Token token) {
+    private JsonValue parse(Token token) {
         return switch (token.kind()) {
-            case OBJECT_OPEN -> parseObject(token);
+            case OBJECT_OPEN -> parseObject();
             case STRING      -> new JsonString(token.value());
-            case ARRAY_OPEN  -> parseArray(token);
-            case FALSE, TRUE -> new Boolean(java.lang.Boolean.parseBoolean(token.value()));
+            case ARRAY_OPEN  -> parseArray();
+            case FALSE, TRUE -> new JsonBoolean(token.value().equals("true"));
             case INTEGRAL    -> parseIntegral(token);
-            case FLOATING    -> parseFloating(token);
+            case DECIMAL     -> parseFloating(token);
             case NULL        -> new Null();
             default          -> throw new ParsingException("Unexpected token: " + token.kind(), null);
         };
     }
 
-    private JsonObject parseObject(Token token) {
-        JsonObject value = new JsonObject();
+    private JsonObject parseObject() {
+        JsonObject object = new JsonObject();
         while (true) {
-            if (lexer.token().kind() != TokenKind.OBJECT_CLOSE) {
+            if (lexer.peek().kind() != TokenKind.OBJECT_CLOSE) {
                 Token key = consume(TokenKind.STRING);
-                if (value.contains(key.value())) {
-                    throw new IllegalStateException("duplicated key " + key.value());
+                if (object.containsKey(key.value())) {
+                    throw new ParsingException("Duplicated key " + key.value() + " in object.", null);
                 }
                 consume(TokenKind.COLON);
-                if (lexer.token().kind().valuable()) {
-                    value.put(key.value(), parse(lexer.consume()));
-                    if (lexer.token().kind() == TokenKind.COMMA) {
+                if (lexer.peek().kind().valuable()) {
+                    object.put(key.value(), parse(lexer.consume()));
+                    if (lexer.peek().kind() == TokenKind.COMMA) {
                         lexer.consume();
                     } else {
                         break;
                     }
                 } else {
-                    throw new ParsingException("Unexpected token " + lexer.token().kind() + " as value in object.", null);
+                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in object.", null);
                 }
             } else {
                 break;
             }
         }
         consume(TokenKind.OBJECT_CLOSE);
-        return value;
+        return object;
     }
 
-    private JsonArray parseArray(Token token) {
-        JsonArray value = new JsonArray();
+    private JsonArray parseArray() {
+        JsonArray array = new JsonArray();
         while (true) {
-            if (lexer.token().kind() != TokenKind.ARRAY_CLOSE) {
-                if (lexer.token().kind().valuable()) {
-                    value.add(parse(lexer.consume()));
-                    if (lexer.token().kind() == TokenKind.COMMA) {
+            if (lexer.peek().kind() != TokenKind.ARRAY_CLOSE) {
+                if (lexer.peek().kind().valuable()) {
+                    array.add(parse(lexer.consume()));
+                    if (lexer.peek().kind() == TokenKind.COMMA) {
                         lexer.consume();
                     } else {
                         break;
                     }
                 } else {
-                    throw new ParsingException("Unexpected token " + lexer.token().kind() + " as value in array.", null);
+                    throw new ParsingException("Unexpected token " + lexer.peek().kind() + " as value in array.", null);
                 }
             } else {
                 break;
             }
         }
         consume(TokenKind.ARRAY_CLOSE);
-        return value;
+        return array;
     }
 
-    private Integral parseIntegral(Token token) {
+    private JsonIntegral parseIntegral(Token token) {
         try {
-            return new Integral(Long.parseLong(token.value()));
+            return new JsonIntegral(Long.parseLong(token.value()));
         } catch (NumberFormatException error) {
             throw new ParsingException("Malformed integral value: " + token.value(), error);
         }
     }
 
-    private Floating parseFloating(Token token) {
+    private JsonDecimal parseFloating(Token token) {
         try {
-            return new Floating(Double.parseDouble(token.value()));
+            return new JsonDecimal(Double.parseDouble(token.value()));
         } catch (NumberFormatException error) {
             throw new ParsingException("Malformed floating value: " + token.value(), error);
         }
     }
 
     private Token consume(TokenKind kind) {
-        if (lexer.token().kind() != kind) {
-            throw new ParsingException("Expecting " + kind + " but got " + lexer.token().kind() + " at " + lexer.token().line() + ":" + lexer.token().offset(), null);
+        if (lexer.peek().kind() != kind) {
+            throw new ParsingException("Expecting " + kind + " but got " + lexer.peek().kind() + " at " + lexer.line() + ":" + lexer.offset(), null);
         } else {
             return lexer.consume();
         }
