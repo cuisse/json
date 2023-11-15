@@ -13,7 +13,7 @@ import java.io.Reader;
 public class Lexer {
 
     private Reader reader;
-    private int line;
+    private int line = 1;
     private int offset;
     private char current;
     private char previous;
@@ -22,10 +22,7 @@ public class Lexer {
     private char[] buffer;
     private int index;
     private int total;
-
-    private static final String TRUE  = "true";
-    private static final String FALSE = "false";
-    private static final String NULL  = "null";
+    private TextBuilder builder;
 
     public Lexer(InputStream stream) {
         if (stream == null) {
@@ -33,7 +30,8 @@ public class Lexer {
         } else {
             this.reader  = new InputStreamReader(stream);
             this.buffer  = new char[stream instanceof StringInputStream input ? input.length() : 1024];
-            this.current = (char) readChar();
+            this.builder = new TextBuilder(512);
+            this.current = readChar();
         }
     }
 
@@ -52,7 +50,7 @@ public class Lexer {
     }
 
     /**
-     * Peek the current token without consuming it.
+     * Get the current token without consuming it.
      *
      * @return The current token.
      */
@@ -75,50 +73,65 @@ public class Lexer {
     }
 
     private Token next() {
-        while (current == ' ' || current == '\t' || current == '\r' || current == '\n') {
+        while (current == ' ' || current == '\n' || current == '\t' || current == '\r') {
             consumeChar();
         }
         if (eof) {
-            return new Token(TokenKind.EOF, "");
+            return Token.EOF;
+        }
+        if (current == '-' || current >= '0' && current <= '9') {
+            return consumeNumber();
         }
         return switch (current) {
-            case '{' -> create(TokenKind.OBJECT_OPEN);
-            case '}' -> create(TokenKind.OBJECT_CLOSE);
-            case ':' -> create(TokenKind.COLON);
-            case '[' -> create(TokenKind.ARRAY_OPEN);
-            case ']' -> create(TokenKind.ARRAY_CLOSE);
-            case ',' -> create(TokenKind.COMMA);
-            case 't' -> create(TokenKind.TRUE, TRUE);
-            case 'f' -> create(TokenKind.FALSE, FALSE);
-            case 'n' -> create(TokenKind.NULL, NULL);
-            case '"' -> createString();
-            case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> createNumber();
+            case '{' -> consume(Token.OBJECT_OPEN);
+            case '"' -> consumeString();
+            case ':' -> consume(Token.COLON);
+            case '[' -> consume(Token.ARRAY_OPEN);
+            case ',' -> consume(Token.COMMA);
+            case 't' -> consumeTrue();
+            case 'f' -> consumeFalse();
+            case 'n' -> consumeNull();
+            case '}' -> consume(Token.OBJECT_CLOSE);
+            case ']' -> consume(Token.ARRAY_CLOSE);
             default  -> throw new LexingException("Invalid token '" + current + "' at " + line + ":" + offset);
         };
     }
 
-    private Token create(TokenKind kind) {
+    private Token consume(Token token) {
         try {
-            return new Token(kind, Character.toString(current));
+            return token;
         } finally {
             consumeChar();
         }
     }
 
-    private Token create(TokenKind kind, String expected) {
-        consumeChar();
-        for (int i = 1; i < expected.length(); i++) {
-            if (current != expected.charAt(i)) {
-                throw new LexingException("Error while reading token '" + kind + "', unexpected value '" + (eof ? "EOF" : Character.toString(current)) + "' at " + line + ":" + offset);
-            }
-            consumeChar();
-        }
-        return new Token(kind, expected);
+    private Token consumeTrue() {
+        consumeChar(); // t
+        expect(TokenKind.TRUE, 'r');
+        expect(TokenKind.TRUE, 'u');
+        expect(TokenKind.TRUE, 'e');
+        return Token.TRUE;
     }
 
-    private Token createString() {
+    private Token consumeFalse() {
+        consumeChar(); // f
+        expect(TokenKind.FALSE, 'a');
+        expect(TokenKind.FALSE, 'l');
+        expect(TokenKind.FALSE, 's');
+        expect(TokenKind.FALSE, 'e');
+        return Token.FALSE;
+    }
+
+    private Token consumeNull() {
+        consumeChar(); // n
+        expect(TokenKind.NULL, 'u');
+        expect(TokenKind.NULL, 'l');
+        expect(TokenKind.NULL, 'l');
+        return Token.NULL;
+    }
+
+    private Token consumeString() {
         consumeChar();
-        StringBuilder value = new StringBuilder(16);
         while (current != '"') {
             if (eof) {
                 throw new LexingException("Got EOF while reading string.");
@@ -128,33 +141,41 @@ public class Lexer {
                 }
                 if (current == '\\') {
                     consumeChar();
-                    if (current == 'n' || current == 'b' || current == 'f' || current == 'r' || current == 't' ||current == '/' || current == '\\' || current == 'u') {
-                        value.append('\\').append(current);
-                        consumeChar();
+                    if (current == 'n' || current == 'b' || current == 'f' || current == 'r' || current == 't' || current == '/' || current == '\\' || current == 'u' || current == '"') {
+                        builder.add('\\');
                     }
                 }
-                value.append(current);
+                builder.add(current);
                 consumeChar();
             }
         }
         consumeChar();
-        return new Token(TokenKind.STRING, value.toString());
+        try {
+            return new Token(TokenKind.STRING, builder.toString());
+        } finally {
+            builder.reset();
+        }
     }
 
-    private Token createNumber() {
-        StringBuilder value = new StringBuilder(16);
+    private Token consumeNumber() {
         boolean integral = true;
         boolean exponent = false;
-        while (Character.isDigit(current) || current == '-' || current == 'e' || current == 'E' || current == '+' || current == '.') {
-            if (current == 'e' || current == 'E' || current == '+' || current == '.') {
+        boolean decimal  = false;
+        boolean digit    = false;
+        boolean exp      = false;
+
+        while ((digit = Character.isDigit(current)) || (decimal = current == '-' || current == '.' || (exp = (current == 'e' || current == 'E')) || current == '+')) {
+            if (decimal) {
                 if (integral) {
                     integral = false;
                 }
-                if (current == '.' || current == 'e' || current == 'E') {
+            }
+            if ((false == digit) && exp || current == '+' || current == '.') {
+                if (current == '.' || exp) {
                     if (false == Character.isDigit(previous)) {
                         throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expecting digit (0-9). ");
                     }
-                    if (current == 'e' || current == 'E') {
+                    if (exp) {
                         if (exponent) {
                             throw new LexingException("Invalid exponent declaration at " + line + ":" + offset);
                         } else {
@@ -163,50 +184,57 @@ public class Lexer {
                     }
                 }
                 if (current == '+') {
-                    if (previous != 'e' && previous != 'E') {
+                    if (false == exp) {
                         throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expected 'e' or 'E'. ");
                     }
                 }
             }
-            value.append(current);
+            builder.add(current);
             previous = current;
             consumeChar();
         }
         if (false == Character.isDigit(previous)) {
             throw new LexingException("Number did not end with a digit at " + line + ":" + offset);
         }
-        return new Token(integral ? TokenKind.INTEGRAL : TokenKind.DECIMAL, value.toString());
+        try {
+            return new Token(integral ? TokenKind.INTEGRAL : TokenKind.DECIMAL, builder.toString());
+        } finally {
+            builder.reset();
+        }
     }
 
     private void consumeChar() {
         if (current == '\n') {
-            line  += 1;
+            line++;
             offset = 0;
         } else {
-            offset += 1;
-        }
-        int c = readChar();
-        if (c == -1) {
-            eof = true;
+            offset++;
         }
         previous = current;
-        current  = (char) c;
+        current  = readChar();
     }
 
-    private int readChar() {
+    private char readChar() {
         try {
-            if (index >= total) {
-                total = 0;
-            }
-            if (total == 0) {
+            if (total <= index) {
                 total = reader.read(buffer, 0, buffer.length);
-                if (total > 0) {
+                if (total != -1) {
                     index = 0;
+                } else {
+                    eof = true;
                 }
             }
-            return total == -1 ? -1 : buffer[index++];
+            return eof ? (char) -1 : buffer[index++];
         } catch (IOException error) {
             throw new LexingException("Error while trying to read from the input. ", error);
+        }
+    }
+
+    private void expect(TokenKind kind, char value) {
+        if (current != value) {
+            throw new LexingException("Error while reading token '" + kind + "', unexpected value '" + (eof ? "EOF" : Character.toString(current)) + "' at " + line + ":" + offset);
+        } else {
+            consumeChar();
         }
     }
 
@@ -218,8 +246,9 @@ public class Lexer {
             try {
                 reader.close();
             } catch (IOException ignored) { } finally {
-                reader = null;
-                buffer = null;
+                reader  = null;
+                buffer  = null;
+                builder = null;
             }
         }
     }
