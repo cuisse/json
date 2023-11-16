@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Predicate;
 
 /**
  * @author Brayan Roman
@@ -81,6 +82,15 @@ public class JsonArray implements JsonValue, List<JsonValue> {
     @Override
     public JsonValue get(int index) {
         return values.get(index);
+    }
+
+    public JsonValue find(Predicate<JsonValue> predicate) {
+        for (JsonValue value : values) {
+            if (predicate.test(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 
     @Override

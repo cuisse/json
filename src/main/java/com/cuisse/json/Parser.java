@@ -35,6 +35,29 @@ public class Parser {
         }
     }
 
+    /**
+     * Parses the json value into the specified target.
+     *
+     * @param target The target type.
+     * @return       The parsed json value.
+     */
+    @SuppressWarnings("unchecked")
+    public<T> T parse(Class<T> target) {
+        var converter = JsonConverters.instance().find(target);
+        if (converter != null) {
+            if (lexer.peek().kind().accepts(converter.type())) {
+                return ((JsonConverter<T>) converter).convert(parse());
+            } else {
+                throw new ParsingException("Expected value '" + converter.type() + "' but the first token heads to " + lexer.peek().kind());
+            }
+        } else {
+            if (JsonValue.class.isAssignableFrom(target)) {
+                return (T) parse();
+            }
+        }
+        throw new ParsingException("Could not parse " + target + " because a JsonConverter is missing.");
+    }
+
     private JsonValue parse(Token token) {
         return switch (token.kind()) {
             case OBJECT_OPEN -> parseObject();

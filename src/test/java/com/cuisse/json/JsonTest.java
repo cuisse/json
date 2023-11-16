@@ -14,7 +14,7 @@ class JsonTest {
             }
         """;
 
-        JsonValue value = (new Parser(input)).parse();
+        JsonValue value = Json.parse(input);
 
         assertAll(
                 () -> assertTrue(value.is(JsonType.OBJECT)),
@@ -36,7 +36,7 @@ class JsonTest {
         """;
 
         assertThrows(ParsingException.class, () -> {
-            (new Parser(input)).parse();
+            Json.parse(input);
         }, "Duplicated key one in object.");
     }
 
@@ -55,7 +55,7 @@ class JsonTest {
         """;
 
         ParsingException error = assertThrows(ParsingException.class, () -> {
-            (new Parser(input)).parse();
+            Json.parse(input);
         });
 
         assertTrue(error.getMessage().contains("Expecting OBJECT_CLOSE but got "));
@@ -75,7 +75,7 @@ class JsonTest {
             ]
         """;
 
-        JsonValue value = (new Parser(input)).parse();
+        JsonValue value = Json.parse(input);
 
         assertAll(
                 () -> assertTrue(value.is(JsonType.ARRAY)),
@@ -95,7 +95,7 @@ class JsonTest {
         """;
 
         assertTrue(
-                assertDoesNotThrow(() -> (new Parser(input)).parse().object().get("bool_true").bool())
+                assertDoesNotThrow(() -> Json.parse(input).object().get("bool_true").bool())
         );
     }
 
@@ -108,7 +108,7 @@ class JsonTest {
         """;
 
         assertEquals(8_045_311_447L,
-                assertDoesNotThrow(() -> (new Parser(input)).parse().object().get("population_2023").integral())
+                assertDoesNotThrow(() -> Json.parse(input).object().get("population_2023").integral())
         );
     }
 
@@ -121,7 +121,7 @@ class JsonTest {
         """;
 
         assertEquals(Math.PI,
-                assertDoesNotThrow(() -> (new Parser(input)).parse().object().get("PI").decimal())
+                assertDoesNotThrow(() -> Json.parse(input).object().get("PI").decimal())
         );
     }
 
@@ -134,7 +134,7 @@ class JsonTest {
         """;
 
         assertInstanceOf(JsonNull.class,
-                assertDoesNotThrow(() -> (new Parser(input)).parse().object().get("money"))
+                assertDoesNotThrow(() -> Json.parse(input).object().get("money"))
         );
     }
 

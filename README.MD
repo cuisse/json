@@ -18,8 +18,7 @@ String input = """
     }
 """;
 
-Parser parser = new Parser(input);
-JsonObject object = parser.parse().object();
+JsonObject object = Json.parse(input).object();
 ```
 
 You can pretty print the object using:
@@ -64,8 +63,7 @@ Parsing arrays
 ```java
 String input = "[5, 5.5, {}, \"Hello world\", false, true, null, []]";
 
-Parser parser = new Parser(input);
-JsonArray array = parser.parse().array();
+JsonArray array = Json.parse(input).array();
 
 System.out.println(array.print());
 ```

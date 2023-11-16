@@ -161,21 +161,21 @@ public class Lexer {
         boolean integral = true;
         boolean exponent = false;
         boolean decimal  = false;
-        boolean digit    = false;
-        boolean exp      = false;
+        boolean isdigit  = false;
+        boolean matchexp = false;
 
-        while ((digit = Character.isDigit(current)) || (decimal = current == '-' || current == '.' || (exp = (current == 'e' || current == 'E')) || current == '+')) {
+        while ((isdigit = Character.isDigit(current)) || (decimal = current == '-' || current == '.' || (matchexp = (current == 'e' || current == 'E')) || current == '+')) {
             if (decimal) {
                 if (integral) {
                     integral = false;
                 }
             }
-            if ((false == digit) && exp || current == '+' || current == '.') {
-                if (current == '.' || exp) {
+            if ((false == isdigit) && matchexp || current == '+' || current == '.') {
+                if (current == '.' || matchexp) {
                     if (false == Character.isDigit(previous)) {
                         throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expecting digit (0-9). ");
                     }
-                    if (exp) {
+                    if (matchexp) {
                         if (exponent) {
                             throw new LexingException("Invalid exponent declaration at " + line + ":" + offset);
                         } else {
@@ -184,7 +184,7 @@ public class Lexer {
                     }
                 }
                 if (current == '+') {
-                    if (false == exp) {
+                    if (false == matchexp) {
                         throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expected 'e' or 'E'. ");
                     }
                 }
