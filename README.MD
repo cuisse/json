@@ -134,7 +134,7 @@ class ItemJsonConverter implements JsonConverter<Item> {
 }
 ```
 
-Remember to register it to the library can use it.
+Remember to register it, so the library can use it.
 
 ```java
 import com.cuisse.json.JsonConverters;
@@ -218,7 +218,7 @@ class ItemJsonConverter implements JsonConverter<Item> {
 
     private boolean validateQuantity(JsonValue value, Validator current) {
         return value.is(JsonIntegral.class) &&
-                value.integral() > 0;
+               value.integral() > 0;
     }
 
     private boolean validatePrice(JsonValue value, Validator current) {
