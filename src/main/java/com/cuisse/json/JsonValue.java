@@ -3,7 +3,7 @@ package com.cuisse.json;
 /**
  * @author Brayan Roman
  */
-public interface JsonValue {
+public sealed interface JsonValue permits JsonArray, JsonBoolean, JsonDecimal, JsonIntegral, JsonObject, JsonNull, JsonString {
 
     /**
      * Get this value type.
@@ -13,13 +13,23 @@ public interface JsonValue {
     JsonType type();
 
     /**
-     * Check whether or not this value match the expected type.
+     * Check whether this value match the expected type.
      *
      * @param type The expected type.
-     * @return     true if the the type match this value, otherwise false.
+     * @return     true if the type match this value, otherwise false.
      */
     default boolean is(JsonType type) {
         return type().equals(type);
+    }
+
+    /**
+     * Check whether this value match the expected type.
+     *
+     * @param type The expected type.
+     * @return     true if the type match this value, otherwise false.
+     */
+    default boolean is(Class<?> type) {
+        return type.isAssignableFrom(this.getClass());
     }
 
     /**

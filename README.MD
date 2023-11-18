@@ -2,10 +2,13 @@
 
 Simple JSON parser written in Java with 0 dependencies.
 
-# Usage
+# Basic Usage
 
 Parsing 
 ```java
+import com.cuisse.json.Json;
+import com.cuisse.json.JsonObject;
+
 String input = """
     {
         "key": "value",
@@ -44,12 +47,12 @@ Outputs
 To access its values use
 
 ```java
-// Prints:
-//  - Sleep
-//  - Sleep
+import com.cuisse.json.JsonArray;
+import com.cuisse.json.JsonValue;
+
 JsonArray todos = object.get("todos").array();
 for (JsonValue todo : todos) {
-    System.out.println(todo.string());
+    System.out.println(todo.string()); // Sleep
 }
 
 // Accessing other values 
@@ -61,6 +64,9 @@ long   mn  = object.get("magic-number").integral(); // 26
 Parsing arrays
 
 ```java
+import com.cuisse.json.Json;
+import com.cuisse.json.JsonArray;
+
 String input = "[5, 5.5, {}, \"Hello world\", false, true, null, []]";
 
 JsonArray array = Json.parse(input).array();
@@ -82,6 +88,147 @@ Outputs
  []
 ]
 ```
+
+# Parsing Custom Values
+First we need to create a our data type
+```java
+record Item(String name, int quantity, double price) { }
+```
+
+Then we need a JsonConverter
+
+```java
+import com.cuisse.json.JsonConverter;
+import com.cuisse.json.JsonDecimal;
+import com.cuisse.json.JsonIntegral;
+import com.cuisse.json.JsonObject;
+import com.cuisse.json.JsonString;
+import com.cuisse.json.JsonType;
+import com.cuisse.json.JsonValue;
+
+class ItemJsonConverter implements JsonConverter<Item> {
+
+    @Override
+    public JsonType type() {
+        return JsonType.OBJECT;
+    }
+
+    @Override
+    public Item convert(JsonObject value) {
+        return new Item(
+                value.object().get("name").string(),
+                value.object().get("quantity").integral(),
+                value.object().get("price").decimal()
+        );
+    }
+
+    @Override
+    public JsonValue convert(Item value) {
+        JsonObject object = new JsonObject();
+        object.put("name", new JsonString(value.name()));
+        object.put("quantity", new JsonIntegral(value.quantity()));
+        object.put("price", new JsonDecimal(value.price()));
+        return object;
+    }
+    
+}
+```
+
+Remember to register it to the library can use it.
+
+```java
+import com.cuisse.json.JsonConverters;
+
+JsonConverters.register(Item.class, new ItemJsonConverter());
+```
+
+Done. Now we are ready to start working with it.
+
+```java
+import com.cuisse.json.Json;
+
+String input = """
+    {
+        "name": "Chocolate cake",
+        "quantity": 2,
+        "price": 16.85
+    }
+""";
+
+Item   item = Json.parse(input, Item.class);
+String json = Json.json(item, true); // convert it back to a pretty printed json string
+```
+
+# Validators
+We also have the option to validate our data before processing it. Let's take the previous converter as an example.
+
+```java
+import com.cuisse.json.JsonConverter;
+import com.cuisse.json.JsonDecimal;
+import com.cuisse.json.JsonIntegral;
+import com.cuisse.json.JsonObject;
+import com.cuisse.json.JsonString;
+import com.cuisse.json.JsonType;
+import com.cuisse.json.JsonValue;
+import com.cuisse.json.Validator;
+
+class ItemJsonConverter implements JsonConverter<Item> {
+
+    // I recommend to reuse validators 
+    private static final Validator validator;
+
+    static {
+        validator = new Validator(JsonType.OBJECT, List.of( // ROOT
+                new Validator("name"    , JsonType.STRING, true, this::validateName    , Validator.NO_SEQUENCE),
+                new Validator("quantity", JsonType.NUMBER, true, this::validateQuantity, Validator.NO_SEQUENCE),
+                new Validator("price"   , JsonType.NUMBER, true, this::validatePrice   , Validator.NO_SEQUENCE)
+        ));
+    }
+
+    @Override
+
+    public JsonType type() {
+        return JsonType.OBJECT;
+    }
+
+    @Override
+    public Item convert(JsonObject value) {
+        validator.validate(value); // Apply the validation before creating our object 
+        return new Item(
+                value.object().get("name").string(),
+                value.object().get("quantity").integral(),
+                value.object().get("price").decimal()
+        );
+    }
+
+    @Override
+    public JsonValue convert(Item value) {
+        JsonObject object = new JsonObject();
+        object.put("name", new JsonString(value.name()));
+        object.put("quantity", new JsonIntegral(value.quantity()));
+        object.put("price", new JsonDecimal(value.price()));
+        // We can also apply the validation after creating the json object
+        validator.validate(object);
+        return object;
+    }
+
+    private boolean validateName(JsonValue value, Validator current) {
+        return false == value.string().isBlank();
+    }
+
+    private boolean validateQuantity(JsonValue value, Validator current) {
+        return value.is(JsonIntegral.class) &&
+                value.integral() > 0;
+    }
+
+    private boolean validatePrice(JsonValue value, Validator current) {
+        return value.is(JsonDecimal.class) &&
+               value.decimal() > 0.00d;
+    }
+
+}
+```
+
 
 # Data Types
 Currently this library supports the following data types, all of them implementing the 'com.cuisse.json.JsonValue' interface.

@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * @author Brayan Roman
  */
-public class JsonObject implements JsonValue, Map<String, JsonValue> {
+public final class JsonObject implements JsonValue, Map<String, JsonValue> {
 
     private final Map<String, JsonValue> values = new HashMap<>();
 

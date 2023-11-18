@@ -42,9 +42,12 @@ import java.util.function.BiPredicate;
  *
  */
 public record Validator(String name, JsonType type, boolean required, BiPredicate<JsonValue, Validator> tester, List<Validator> validators) {
+    public static final String NO_NAME = null;
+    public static final BiPredicate<JsonValue, Validator> NO_TEST = null;
+    public static final List<Validator> NO_SEQUENCE = null;
 
     public Validator(JsonType type, List<Validator> validators) {
-        this(null, type, true, null, validators);
+        this(NO_NAME, type, true, NO_TEST, validators);
     }
 
     /**

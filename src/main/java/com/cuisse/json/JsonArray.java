@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 /**
  * @author Brayan Roman
  */
-public class JsonArray implements JsonValue, List<JsonValue> {
+public final class JsonArray implements JsonValue, List<JsonValue> {
 
     private final List<JsonValue> values = new ArrayList<>();
 
