@@ -4,6 +4,7 @@ package com.cuisse.json;
  * @author Brayan Roman
  */
 public record JsonDecimal(double value) implements JsonValue, Comparable<JsonDecimal> {
+    public static final JsonDecimal ZERO = new JsonDecimal(0);
 
     @Override
     public JsonType type() {

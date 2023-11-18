@@ -47,17 +47,23 @@ public record Validator(String name, JsonType type, boolean required, BiPredicat
         this(null, type, true, null, validators);
     }
 
-    public void validate(JsonValue value) {
+    /**
+     * Validate the structure of a JSON value.
+     *
+     * @param value                The JSON value to validate.
+     * @throws ValidationException If anything in the validation has failed.
+     */
+    public void validate(JsonValue value) throws ValidationException {
         if (value == null) {
             if (required) {
-                throw new NullPointerException("Required value '" + name + "' is missing.");
+                throw new ValidationException("Required value '" + name + "' is missing.");
             }
         }
         if (value != null) {
             if (value.is(type)) {
                 if (tester != null) {
                     if (false == tester.test(value, this)) {
-                        throw new IllegalStateException("Value '" + name + "' of type '" + value.type() + "' didn't pass the test.");
+                        throw new ValidationException("Value '" + name + "' of type '" + value.type() + "' didn't pass the test.");
                     }
                 }
                 if (type == JsonType.OBJECT && validators != null) {
@@ -68,7 +74,7 @@ public record Validator(String name, JsonType type, boolean required, BiPredicat
                     }
                 }
             } else {
-                throw new IllegalArgumentException("Json type mismatch, expecting " + type + " but got " + value.type());
+                throw new ValidationException("Json type mismatch, expecting " + type + " but got " + value.type());
             }
         }
     }

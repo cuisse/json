@@ -3,7 +3,7 @@ package com.cuisse.json;
 /**
  * @author Brayan Roman
  */
-public class TextBuilder {
+public final class TextBuilder {
 
     private int offset;
     private char[] buffer;
@@ -14,6 +14,15 @@ public class TextBuilder {
         } else {
             this.buffer = new char[size];
         }
+    }
+
+    /**
+     * Returns the current length of the text.
+     *
+     * @return The length of the text.
+     */
+    public int length() {
+        return offset;
     }
 
     /**

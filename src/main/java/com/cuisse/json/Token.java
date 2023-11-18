@@ -12,8 +12,8 @@ public record Token(TokenKind kind, String value) {
     public static final Token ARRAY_CLOSE  = new Token(TokenKind.ARRAY_CLOSE, null);
     public static final Token COMMA        = new Token(TokenKind.COMMA, null);
     public static final Token EOF          = new Token(TokenKind.EOF, null);
-    public static final Token TRUE         = new Token(TokenKind.TRUE, "true");
-    public static final Token FALSE        = new Token(TokenKind.FALSE, "false");
-    public static final Token NULL         = new Token(TokenKind.NULL, "null");
+    public static final Token TRUE         = new Token(TokenKind.TRUE, null);
+    public static final Token FALSE        = new Token(TokenKind.FALSE, null);
+    public static final Token NULL         = new Token(TokenKind.NULL, null);
 
 }

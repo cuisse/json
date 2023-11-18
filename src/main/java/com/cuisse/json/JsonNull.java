@@ -4,6 +4,7 @@ package com.cuisse.json;
  * @author Brayan Roman
  */
 public record JsonNull() implements JsonValue {
+    public static final JsonNull NULL = new JsonNull();
 
     @Override
     public JsonType type() {
