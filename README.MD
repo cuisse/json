@@ -252,7 +252,7 @@ JSON parsers in Java and the results are descent. You can give a check bellow.
 <summary>Results</summary>
 
 ```text
-# Run complete. Total time: 01:12:14
+# Run complete. Total time: 00:35:59
 
 REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
 why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
@@ -266,11 +266,35 @@ works, and factor in a small probability of new VM bugs. Additionally, while com
 different JVMs are already problematic, the performance difference caused by different Blackhole
 modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
 
-Benchmark            Mode  Cnt  Score    Error  Units
-Benchmark.a_json     avgt  500  0.129 ±  0.001  ms/op
-Benchmark.b_jackson  avgt  500  0.236 ±  0.382  ms/op
-Benchmark.c_gson     avgt  500  0.102 ±  0.002  ms/op
+Benchmark          Mode  Cnt  Score   Error  Units
+Benchmark.gson     avgt  100  0.096 ± 0.002  ms/op
+Benchmark.jackson  avgt  100  0.106 ± 0.006  ms/op
+Benchmark.json     avgt  100  0.086 ± 0.001  ms/op
 ```
+
+<details>
+    <summary>Detailed Logs</summary>
+
+```text
+
+Result "com.cuisse.json.Benchmark.gson":
+  0.096 ±(99.9%) 0.002 ms/op [Average]
+  (min, avg, max) = (0.093, 0.096, 0.134), stdev = 0.005
+  CI (99.9%): [0.094, 0.097] (assumes normal distribution)
+
+Result "com.cuisse.json.Benchmark.jackson":
+  0.106 ±(99.9%) 0.006 ms/op [Average]
+  (min, avg, max) = (0.066, 0.106, 0.128), stdev = 0.018
+  CI (99.9%): [0.100, 0.112] (assumes normal distribution)
+  
+Result "com.cuisse.json.Benchmark.json":
+  0.086 ±(99.9%) 0.001 ms/op [Average]
+  (min, avg, max) = (0.080, 0.086, 0.097), stdev = 0.004
+  CI (99.9%): [0.085, 0.087] (assumes normal distribution)
+  
+```
+
+</details>
 
 Of course, you can always run your benchmark tests by yourself. The JSON data used in this benchmark is bellow.
 
