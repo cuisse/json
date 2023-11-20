@@ -6,8 +6,8 @@ Simple JSON parser written in Java with 0 dependencies.
 
 Parsing 
 ```java
-import com.cuisse.json.Json;
-import com.cuisse.json.JsonObject;
+import io.cuisse.json.Json;
+import io.cuisse.json.JsonObject;
 
 String input = """
     {
@@ -47,8 +47,8 @@ Outputs
 To access its values use
 
 ```java
-import com.cuisse.json.JsonArray;
-import com.cuisse.json.JsonValue;
+import io.cuisse.json.JsonArray;
+import io.cuisse.json.JsonValue;
 
 JsonArray todos = object.get("todos").array();
 for (JsonValue todo : todos) {
@@ -64,8 +64,8 @@ long   mn  = object.get("magic-number").integral(); // 26
 Parsing arrays
 
 ```java
-import com.cuisse.json.Json;
-import com.cuisse.json.JsonArray;
+import io.cuisse.json.Json;
+import io.cuisse.json.JsonArray;
 
 String input = "[5, 5.5, {}, \"Hello world\", false, true, null, []]";
 
@@ -98,13 +98,13 @@ record Item(String name, int quantity, double price) { }
 Then we need a JsonConverter
 
 ```java
-import com.cuisse.json.JsonConverter;
-import com.cuisse.json.JsonDecimal;
-import com.cuisse.json.JsonIntegral;
-import com.cuisse.json.JsonObject;
-import com.cuisse.json.JsonString;
-import com.cuisse.json.JsonType;
-import com.cuisse.json.JsonValue;
+import io.cuisse.json.JsonConverter;
+import io.cuisse.json.JsonDecimal;
+import io.cuisse.json.JsonIntegral;
+import io.cuisse.json.JsonObject;
+import io.cuisse.json.JsonString;
+import io.cuisse.json.JsonType;
+import io.cuisse.json.JsonValue;
 
 class ItemJsonConverter implements JsonConverter<Item> {
 
@@ -137,7 +137,7 @@ class ItemJsonConverter implements JsonConverter<Item> {
 Remember to register it, so the library can use it.
 
 ```java
-import com.cuisse.json.JsonConverters;
+import io.cuisse.json.JsonConverters;
 
 JsonConverters.register(Item.class, new ItemJsonConverter());
 ```
@@ -145,7 +145,7 @@ JsonConverters.register(Item.class, new ItemJsonConverter());
 Done. Now we are ready to start working with it.
 
 ```java
-import com.cuisse.json.Json;
+import io.cuisse.json.Json;
 
 String input = """
     {
@@ -163,14 +163,14 @@ String json = Json.json(item, true); // convert it back to a pretty printed json
 We also have the option to validate our data before processing it. Let's take the previous converter as an example.
 
 ```java
-import com.cuisse.json.JsonConverter;
-import com.cuisse.json.JsonDecimal;
-import com.cuisse.json.JsonIntegral;
-import com.cuisse.json.JsonObject;
-import com.cuisse.json.JsonString;
-import com.cuisse.json.JsonType;
-import com.cuisse.json.JsonValue;
-import com.cuisse.json.Validator;
+import io.cuisse.json.JsonConverter;
+import io.cuisse.json.JsonDecimal;
+import io.cuisse.json.JsonIntegral;
+import io.cuisse.json.JsonObject;
+import io.cuisse.json.JsonString;
+import io.cuisse.json.JsonType;
+import io.cuisse.json.JsonValue;
+import io.cuisse.json.Validator;
 
 class ItemJsonConverter implements JsonConverter<Item> {
 
@@ -231,7 +231,7 @@ class ItemJsonConverter implements JsonConverter<Item> {
 
 
 # Data Types
-Currently this library supports the following data types, all of them implementing the 'com.cuisse.json.JsonValue' interface.
+Currently this library supports the following data types, all of them implementing the 'io.cuisse.json.JsonValue' interface.
 
 ```text
 JsonArray    -> List<JsonValue>
@@ -277,17 +277,17 @@ Benchmark.json     avgt  100  0.086 ± 0.001  ms/op
 
 ```text
 
-Result "com.cuisse.json.Benchmark.gson":
+Result "io.cuisse.json.Benchmark.gson":
   0.096 ±(99.9%) 0.002 ms/op [Average]
   (min, avg, max) = (0.093, 0.096, 0.134), stdev = 0.005
   CI (99.9%): [0.094, 0.097] (assumes normal distribution)
 
-Result "com.cuisse.json.Benchmark.jackson":
+Result "io.cuisse.json.Benchmark.jackson":
   0.106 ±(99.9%) 0.006 ms/op [Average]
   (min, avg, max) = (0.066, 0.106, 0.128), stdev = 0.018
   CI (99.9%): [0.100, 0.112] (assumes normal distribution)
   
-Result "com.cuisse.json.Benchmark.json":
+Result "io.cuisse.json.Benchmark.json":
   0.086 ±(99.9%) 0.001 ms/op [Average]
   (min, avg, max) = (0.080, 0.086, 0.097), stdev = 0.004
   CI (99.9%): [0.085, 0.087] (assumes normal distribution)
