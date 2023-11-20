@@ -1,4 +1,4 @@
-package io.cuisse.json;
+package io.github.cuisse.json;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
