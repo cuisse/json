@@ -9,6 +9,7 @@
     <version>1.0.0</version>
     <description>A simple JSON parser.</description>
     <url>https://github.com/cuisse/json</url>
+    <name>JSON</name>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
