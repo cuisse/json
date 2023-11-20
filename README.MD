@@ -243,6 +243,20 @@ JsonObject   -> Map<String, JsonValue>
 JsonString   -> record(String value)
 ```
 
+# Importing the library
+### Maven
+```xml
+<dependency>
+  <groupId>io.github.cuisse</groupId>
+  <artifactId>json</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+### Gradle
+```groovy
+implementation 'io.github.cuisse:json:1.0.0'
+```
+
 # Performance
 
 The performance it is pretty good, I have run a benchmark test against other popular
