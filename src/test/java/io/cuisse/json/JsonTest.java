@@ -1,5 +1,6 @@
-package com.cuisse.json;
+package io.cuisse.json;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -95,7 +96,7 @@ class JsonTest {
         """;
 
         assertEquals(8_045_311_447L,
-                assertDoesNotThrow(() -> Json.parse(input).object().get("population_2023").integral())
+                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("population_2023").integral())
         );
     }
 
@@ -108,7 +109,7 @@ class JsonTest {
         """;
 
         assertEquals(Math.PI,
-                assertDoesNotThrow(() -> Json.parse(input).object().get("PI").decimal())
+                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("PI").decimal())
         );
     }
 
@@ -171,7 +172,7 @@ class JsonTest {
         """;
 
         assertInstanceOf(JsonNull.class,
-                assertDoesNotThrow(() -> Json.parse(input).object().get("money"))
+                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("money"))
         );
     }
 

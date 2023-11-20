@@ -1,4 +1,4 @@
-package com.cuisse.json;
+package io.cuisse.json;
 
 import java.util.Collection;
 import java.util.HashMap;
