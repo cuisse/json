@@ -1,9 +1,12 @@
 ### Json Java
 
-Simple JSON parser written in Java with 0 dependencies.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.cuisse/json.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.cuisse/json)
+[![javadoc](https://javadoc.io/badge2/io.github.cuisse/json/javadoc.svg)](https://javadoc.io/doc/io.github.cuisse/json)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+Simple JSON parser written in Java.
 
 # Basic Usage
-
 Parsing
 ```java
 import io.github.cuisse.json.Json;
@@ -520,4 +523,4 @@ Of course, you can always run your benchmark tests by yourself. The JSON data us
 
 # Contribution
 
-Help is always appreciate, if you feel something can be improved please let me know by a pull request.
+Help is always appreciate, if you feel something can be improved please let me know by a pull request. Thanks in advance.
