@@ -1,4 +1,4 @@
-### Json Java
+## Json Java
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.cuisse/json.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.cuisse/json)
 [![javadoc](https://javadoc.io/badge2/io.github.cuisse/json/javadoc.svg)](https://javadoc.io/doc/io.github.cuisse/json)
@@ -6,8 +6,9 @@
 
 Simple JSON parser written in Java.
 
-# Basic Usage
-Parsing
+### Basic Usage
+Parsing a JSON string is simple, just use the 'Json.parse' method and you are ready to go.
+
 ```java
 import io.github.cuisse.json.Json;
 import io.github.cuisse.json.JsonObject;
@@ -47,7 +48,7 @@ Outputs
 }
 ```
 
-To access its values use
+To access its values use:
 
 ```java
 import io.github.cuisse.json.JsonArray;
@@ -64,7 +65,7 @@ String key = object.get("key").string(); // "value"
 long   mn  = object.get("magic-number").integral(); // 26
 ```
 
-Parsing arrays
+Parsing an array is as simple as parsing an object.
 
 ```java
 import io.github.cuisse.json.Json;
@@ -77,7 +78,7 @@ JsonArray array = Json.parse(input).array();
 System.out.println(array.print());
 ```
 
-Outputs
+Outputs:
 
 ```text
 [
@@ -92,13 +93,14 @@ Outputs
 ]
 ```
 
-# Parsing Custom Values
-First we need to create a our data type
+### Parsing Custom Values
+First we need to create a our data type:
+
 ```java
 record Item(String name, int quantity, double price) { }
 ```
 
-Then we need a JsonConverter
+Then we need a `JsonConverter` to convert our custom data type to a `JsonValue` and vice versa.
 
 ```java
 import io.github.cuisse.json.JsonConverter;
@@ -162,7 +164,7 @@ Item   item = Json.parse(input, Item.class);
 String json = Json.json(item, true); // convert it back to a pretty printed json string
 ```
 
-# Validators
+### Data Validation 
 We also have the option to validate our data before processing it. Let's take the previous converter as an example.
 
 ```java
@@ -232,9 +234,8 @@ class ItemJsonConverter implements JsonConverter<Item> {
 }
 ```
 
-
-# Data Types
-Currently this library supports the following data types, all of them implementing the 'io.github.cuisse.json.JsonValue' interface.
+### Supported Data Types
+Currently this library supports the following data types, all of them implementing the `io.github.cuisse.json.JsonValue` interface.
 
 ```text
 JsonArray    -> List<JsonValue>
@@ -246,8 +247,8 @@ JsonObject   -> Map<String, JsonValue>
 JsonString   -> record(String value)
 ```
 
-# Importing the library
-### Maven
+### Installation 
+#### Maven
 ```xml
 <dependency>
   <groupId>io.github.cuisse</groupId>
@@ -255,13 +256,12 @@ JsonString   -> record(String value)
   <version>1.0.0</version>
 </dependency>
 ```
-### Gradle
+#### Gradle
 ```groovy
 implementation 'io.github.cuisse:json:1.0.0'
 ```
 
-# Performance
-
+### Performance
 The performance it is pretty good, I have run a benchmark test against other popular
 JSON parsers in Java and the results are descent. You can give a check bellow.
 
@@ -521,6 +521,8 @@ Of course, you can always run your benchmark tests by yourself. The JSON data us
 </details>
 </details>
 
-# Contribution
-
+### Contribution
 Help is always appreciate, if you feel something can be improved please let me know by a pull request. Thanks in advance.
+
+### License
+This project is licensed under the MIT License.
