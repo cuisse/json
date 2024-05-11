@@ -13,6 +13,7 @@ import java.io.Reader;
 public class Lexer {
 
     private Reader reader;
+    private JsonOptions options;
     private int line = 1;
     private int offset;
     private char current;
@@ -24,11 +25,12 @@ public class Lexer {
     private int total;
     private TextBuilder builder;
 
-    public Lexer(InputStream stream) {
+    public Lexer(InputStream stream, JsonOptions options) {
         if (stream == null) {
             throw new NullPointerException("stream == null");
         } else {
             this.reader  = new InputStreamReader(stream);
+            this.options = options;
             this.buffer  = new char[1024];
             this.builder = new TextBuilder(512);
             this.current = readChar();
@@ -87,6 +89,10 @@ public class Lexer {
             if (current >= '0' || current == '-') {
                 return consumeNumber();
             }
+        }
+        if (current == '/') {
+            consumeComment();
+            return next();
         }
         return switch (current) {
             case '{' -> consume(Token.OBJECT_OPEN);
@@ -147,6 +153,40 @@ public class Lexer {
             }
         }
         throw new LexingException("Invalid token 'n" + current + "' at " + line + ":" + offset);
+    }
+
+    private void consumeComment() {
+        if (options.get("skipComments", Boolean.class, () -> false) == false) {
+            throw new LexingException("Invalid comment token '/' at " + line + ":" + offset + ", maybe try again with 'skipComments' set to true?");
+        }
+        consumeChar();
+        if (current == '/') {
+            consumeChar();
+            while (current != '\n') {
+                consumeChar();
+                if (eof) {
+                    return;
+                }
+            }
+            consumeChar();
+        } else {
+            if (current == '*') {
+                while (true) {
+                    if (eof) {
+                        throw new LexingException("Unexpected end of the file while in block comment at " + line + ":" + offset);
+                    } else {
+                        consumeChar();
+                        if (current == '*') {
+                            consumeChar();
+                            if (current == '/') {
+                                consumeChar();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private Token consumeString() {

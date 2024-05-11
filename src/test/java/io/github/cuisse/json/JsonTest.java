@@ -176,4 +176,43 @@ class JsonTest {
         );
     }
 
+    @Test
+    void shouldCorrectlyParseSingleLineComment() {
+        String input = """
+            {
+                // single line comment
+                "money": null 
+                ,
+                // another single line comment
+                "happiness": "yes"
+            }
+        """;
+
+        assertInstanceOf(JsonNull.class,
+                Assertions.assertDoesNotThrow(() -> Json.parse(input, JsonOptions.BASIC).object().get("money"))
+        );
+        assertInstanceOf(JsonString.class,
+                Assertions.assertDoesNotThrow(() -> Json.parse(input, JsonOptions.BASIC).object().get("happiness"))
+        );
+    }
+
+    @Test
+    void shouldCorrectlyParseMultiLineComment() {
+        String input = """
+            {
+                /*
+                    Multiline Comment 
+                    "money": null 
+                */
+                "happiness": "yes"
+                /*
+                    Success?
+                */
+            }
+        """;
+        assertInstanceOf(JsonString.class,
+                Assertions.assertDoesNotThrow(() -> Json.parse(input, JsonOptions.BASIC).object().get("happiness"))
+        );
+    }
+
 }

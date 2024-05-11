@@ -14,19 +14,29 @@ public final class Json {
      * @return      The parsed value.
      */
     public static JsonValue parse(String input) {
-        return parse(
-                new StringInputStream(input)
-        );
+        return parse(new StringInputStream(input), JsonOptions.NONE);
     }
 
     /**
      * Parses the input into a JsonValue.
      *
-     * @param input The JSON input.
-     * @return      The parsed value.
+     * @param input   The JSON input.
+     * @param options The JSON options.
+     * @return        The parsed value.
      */
-    public static JsonValue parse(InputStream input) {
-        Parser parser = new Parser(input);
+    public static JsonValue parse(String input, JsonOptions options) {
+        return parse(new StringInputStream(input), options);
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input   The JSON input.
+     * @param options The JSON options.
+     * @return        The parsed value.
+     */
+    public static JsonValue parse(InputStream input, JsonOptions options) {
+        Parser parser = new Parser(input, options);
         return parser.parse();
     }
 
@@ -38,18 +48,31 @@ public final class Json {
      * @return       The parsed value.
      */
     public static<T> T parse(String input, Class<T> target) {
-        return parse(new StringInputStream(input), target);
+        return parse(new StringInputStream(input), target, JsonOptions.NONE);
     }
 
     /**
      * Parses the input into the specified type.
      *
-     * @param input  The JSON input.
-     * @param target The target class.
-     * @return       The parsed value.
+     * @param input   The JSON input.
+     * @param target  The target class.
+     * @param options The JSON options.
+     * @return        The parsed value.
      */
-    public static<T> T parse(InputStream input, Class<T> target) {
-        Parser parser = new Parser(input);
+    public static<T> T parse(String input, Class<T> target, JsonOptions options) {
+        return parse(new StringInputStream(input), target, options);
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input   The JSON input.
+     * @param target  The target class.
+     * @param options The JSON options.
+     * @return        The parsed value.
+     */
+    public static<T> T parse(InputStream input, Class<T> target, JsonOptions options) {
+        Parser parser = new Parser(input, options);
         return parser.parse(target);
     }
 

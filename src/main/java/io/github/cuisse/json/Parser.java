@@ -9,12 +9,12 @@ public class Parser {
 
     private Lexer lexer;
 
-    public Parser(String input) {
-        this.lexer = new Lexer(new StringInputStream(input));
+    public Parser(String input, JsonOptions options) {
+        this.lexer = new Lexer(new StringInputStream(input), options);
     }
 
-    public Parser(InputStream stream) {
-        this.lexer = new Lexer(stream);
+    public Parser(InputStream stream, JsonOptions options) {
+        this.lexer = new Lexer(stream, options);
     }
 
     /**
