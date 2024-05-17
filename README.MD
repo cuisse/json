@@ -526,3 +526,6 @@ Help is always appreciate, if you feel something can be improved please let me k
 
 ### License
 This project is licensed under the MIT License.
+
+### TODOS
+[ ] Update to version 2.0.0
