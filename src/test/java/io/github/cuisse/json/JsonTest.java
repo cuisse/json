@@ -215,4 +215,53 @@ class JsonTest {
         );
     }
 
+    @Test
+    void shouldCorrectlyPassValidator() {
+        String input = """
+                     {
+                         "entities": {
+                             "spider": {
+                                 "name": "Lucas",
+                                 "happiness": 100.0
+                             }
+                         }
+                     }
+                """;
+
+        Validator validator = Validator.of(JsonType.OBJECT).fields(
+                Validator.of("entities", JsonType.OBJECT).fields(
+                        Validator.of("spider", JsonType.OBJECT).fields(
+                                Validator.of("name", JsonType.STRING)
+                                        .condition((value, current) -> value.string().equals("Lucas")),
+                                Validator.of("happiness", JsonType.NUMBER)
+                                        .condition((value, current) -> value.decimal() > 50d))));
+
+        Assertions.assertDoesNotThrow(() -> validator.validate(Json.parse(input)));
+ 
+    }
+
+    @Test
+    void shouldNotPassValidator() {
+        String input = """
+                     {
+                         "entities": {
+                             "spider": {
+                                 "name": "Mark",
+                                 "happiness": 5.0
+                             }
+                         }
+                     }
+                """;
+
+        Validator validator = Validator.of(JsonType.OBJECT).fields(
+                Validator.of("entities", JsonType.OBJECT).fields(
+                        Validator.of("spider", JsonType.OBJECT).fields(
+                                Validator.of("name", JsonType.STRING)
+                                        .condition((value, current) -> value.string().equals("Lucas")),
+                                Validator.of("happiness", JsonType.NUMBER)
+                                        .condition((value, current) -> value.decimal() > 50d))));
+
+        Assertions.assertThrows(JsonValidationException.class, () -> validator.validate(Json.parse(input)));
+    }
+
 }
