@@ -183,11 +183,11 @@ class ItemJsonConverter implements JsonConverter<Item> {
     private static final Validator validator;
 
     static {
-        validator = new Validator(JsonType.OBJECT, List.of( // ROOT
-                new Validator("name"    , JsonType.STRING, true, this::validateName    , Validator.NO_SEQUENCE),
-                new Validator("quantity", JsonType.NUMBER, true, this::validateQuantity, Validator.NO_SEQUENCE),
-                new Validator("price"   , JsonType.NUMBER, true, this::validatePrice   , Validator.NO_SEQUENCE)
-        ));
+        validator = Validator.of(JsonType.OBJECT).fields( // ROOT
+                Validator.of("name"    , JsonType.STRING).condition(this::validateName),
+                Validator.of("quantity", JsonType.NUMBER).condition(this::validateQuantity),
+                Validator.of("price"   , JsonType.NUMBER).condition(this::validatePrice)
+        );
     }
 
     @Override
