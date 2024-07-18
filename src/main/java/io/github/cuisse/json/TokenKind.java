@@ -4,19 +4,29 @@ package io.github.cuisse.json;
  * @author Brayan Roman
  */
 public enum TokenKind {
-    OBJECT_OPEN,  // {
-    OBJECT_CLOSE, // }
-    STRING,       // "
-    COLON,        // :
-    ARRAY_OPEN,   // [
-    ARRAY_CLOSE,  // ]
-    COMMA,        // ,
-    FALSE,        // false
-    TRUE,         // true
-    INTEGRAL,     // -, 0..9
-    DECIMAL,      // -, +, ., 0..9, e, E
-    NULL,         // null
-    EOF;          // end of the file
+    OBJECT_OPEN(true), // {
+    OBJECT_CLOSE,               // }
+    STRING(true),      // "
+    COLON,                      // :
+    ARRAY_OPEN(true),  // [
+    ARRAY_CLOSE,                // ]
+    COMMA,                      // ,
+    FALSE(true),       // false
+    TRUE(true),        // true
+    INTEGRAL(true),    // -, 0..9
+    DECIMAL(true),     // -, +, ., 0..9, e, E
+    NULL(true),        // null
+    EOF;                        // end of the file
+
+    private final boolean valuable;
+
+    TokenKind() {
+        this.valuable = false;
+    }
+
+    TokenKind(boolean valuable) {
+        this.valuable = valuable;
+    }
 
     public boolean accepts(JsonType type) {
         return switch (type) {
@@ -30,14 +40,7 @@ public enum TokenKind {
     }
 
     public boolean valuable() {
-        return this == OBJECT_OPEN ||
-               this == STRING      ||
-               this == ARRAY_OPEN  ||
-               this == FALSE       ||
-               this == TRUE        ||
-               this == INTEGRAL    ||
-               this == DECIMAL     ||
-               this == NULL;
+        return valuable;
     }
 
 }

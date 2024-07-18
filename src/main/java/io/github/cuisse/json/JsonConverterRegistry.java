@@ -6,23 +6,38 @@ import java.util.Map;
 /**
  * @author Brayan Roman
  */
-public final class JsonConverters {
+public final class JsonConverterRegistry {
 
-    private static volatile JsonConverters instance;
+    private static volatile JsonConverterRegistry instance;
 
     /**
      * Get this registry instance.
      *
-     * @return The JsonConverters instance.
+     * @return The JsonConverterRegistry instance.
      */
-    public static JsonConverters instance() {
+    public static JsonConverterRegistry instance() {
         if (instance == null) {
-            instance = new JsonConverters(); // lazy initialization
+            instance = new JsonConverterRegistry(new HashMap<>()); // lazy initialization
         }
         return instance;
     }
 
-    private final Map<Class<?>, JsonConverter<?>> converters = new HashMap<>();
+    public static JsonConverterRegistry instance(JsonConverterRegistry registry) {
+        if (registry == null) {
+            throw new NullPointerException("registry == null");
+        }
+        instance = registry;
+        return instance;
+    }
+
+    private final Map<Class<?>, JsonConverter<?>> registry;
+
+    public JsonConverterRegistry(Map<Class<?>, JsonConverter<?>> registry) {
+        if (registry == null) {
+            throw new NullPointerException("registry == null");
+        }
+        this.registry = registry;
+    }
 
     /**
      * Registers a new JsonConverter into this registry.
@@ -31,7 +46,7 @@ public final class JsonConverters {
      * @param converter The converter to add.
      */
     public void register(Class<?> target, JsonConverter<?> converter) {
-        converters.put(target, converter);
+        registry.put(target, converter);
     }
 
     /**
@@ -41,7 +56,7 @@ public final class JsonConverters {
      * @return       A JsonConverter instance if found, otherwise null.
      */
     public JsonConverter<?> find(Class<?> target) {
-        return converters.get(target);
+        return registry.get(target);
     }
 
     /**
@@ -51,9 +66,7 @@ public final class JsonConverters {
      * @return       True if any converter was deleted, otherwise false.
      */
     public boolean delete(Class<?> target) {
-        return converters.remove(target) != null;
+        return registry.remove(target) != null;
     }
-
-    private JsonConverters() { }
 
 }

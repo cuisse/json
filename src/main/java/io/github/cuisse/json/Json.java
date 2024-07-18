@@ -14,7 +14,7 @@ public final class Json {
      * @return      The parsed value.
      */
     public static JsonValue parse(String input) {
-        return parse(new StringInputStream(input), JsonOptions.NONE);
+        return parse(new JsonStringReader(input), JsonOptions.NONE);
     }
 
     /**
@@ -25,7 +25,29 @@ public final class Json {
      * @return        The parsed value.
      */
     public static JsonValue parse(String input, JsonOptions options) {
-        return parse(new StringInputStream(input), options);
+        return parse(new JsonStringReader(input), options);
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input    The JSON input.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static JsonValue parse(String input, JsonOptions options, JsonConverterRegistry registry) {
+        return parse(new JsonStringReader(input), options, registry);
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input The JSON input.
+     * @return      The parsed value.
+     */
+    public static JsonValue parse(InputStream input) {
+        return parse(new JsonInputStreamReader(input), JsonOptions.NONE);
     }
 
     /**
@@ -36,7 +58,43 @@ public final class Json {
      * @return        The parsed value.
      */
     public static JsonValue parse(InputStream input, JsonOptions options) {
-        Parser parser = new Parser(input, options);
+        return parse(new JsonInputStreamReader(input), options);
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input    The JSON input.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static JsonValue parse(InputStream input, JsonOptions options, JsonConverterRegistry registry) {
+        return parse(new JsonInputStreamReader(input), options, registry);
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input   The JSON input.
+     * @param options The JSON options.
+     * @return        The parsed value.
+     */
+    public static JsonValue parse(JsonReader input, JsonOptions options) {
+        return parse(input, options, JsonConverterRegistry.instance());
+    }
+
+    /**
+     * Parses the input into a JsonValue.
+     *
+     * @param input    The JSON input.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static JsonValue parse(JsonReader input, JsonOptions options, JsonConverterRegistry registry) {
+        Parser parser = Parser.create();
+        parser.initialize(input, options, registry);
         return parser.parse();
     }
 
@@ -48,7 +106,7 @@ public final class Json {
      * @return       The parsed value.
      */
     public static<T> T parse(String input, Class<T> target) {
-        return parse(new StringInputStream(input), target, JsonOptions.NONE);
+        return parse(new JsonStringReader(input), target, JsonOptions.NONE);
     }
 
     /**
@@ -60,7 +118,31 @@ public final class Json {
      * @return        The parsed value.
      */
     public static<T> T parse(String input, Class<T> target, JsonOptions options) {
-        return parse(new StringInputStream(input), target, options);
+        return parse(new JsonStringReader(input), target, options, JsonConverterRegistry.instance());
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input    The JSON input.
+     * @param target   The target class.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static<T> T parse(String input, Class<T> target, JsonOptions options, JsonConverterRegistry registry) {
+        return parse(new JsonStringReader(input), target, options, registry);
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input  The JSON input.
+     * @param target The target class.
+     * @return       The parsed value.
+     */
+    public static<T> T parse(InputStream input, Class<T> target) {
+        return parse(new JsonInputStreamReader(input), target, JsonOptions.NONE);
     }
 
     /**
@@ -72,7 +154,46 @@ public final class Json {
      * @return        The parsed value.
      */
     public static<T> T parse(InputStream input, Class<T> target, JsonOptions options) {
-        Parser parser = new Parser(input, options);
+        return parse(new JsonInputStreamReader(input), target, options, JsonConverterRegistry.instance());
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input    The JSON input.
+     * @param target   The target class.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static<T> T parse(InputStream input, Class<T> target, JsonOptions options, JsonConverterRegistry registry) {
+        return parse(new JsonInputStreamReader(input), target, options, registry);
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input   The JSON input.
+     * @param target  The target class.
+     * @param options The JSON options.
+     * @return        The parsed value.
+     */
+    public static<T> T parse(JsonReader input, Class<T> target, JsonOptions options) {
+        return parse(input, target, options, JsonConverterRegistry.instance());
+    }
+
+    /**
+     * Parses the input into the specified type.
+     *
+     * @param input    The JSON input.
+     * @param target   The target class.
+     * @param options  The JSON options.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static<T> T parse(JsonReader input, Class<T> target, JsonOptions options, JsonConverterRegistry registry) {
+        Parser parser = Parser.create();
+        parser.initialize(input, options, registry);
         return parser.parse(target);
     }
 
@@ -83,25 +204,20 @@ public final class Json {
      * @param pretty Specifies if the output should be pretty printed or no.
      * @return       The parsed value.
      */
-    @SuppressWarnings("unchecked")
-    public static<T> String json(T object, boolean pretty) {
-        if (object == null) {
-            throw new NullPointerException("object == null");
-        }
-        if (object instanceof JsonValue json) {
-            if (json.is(JsonType.OBJECT) || json.is(JsonType.ARRAY)) {
-                return pretty ? json.print() : json.toString();
-            } else {
-                throw new IllegalArgumentException("Could not convert " + object.getClass() + " into a JSON string.");
-            }
-        } else {
-            var converter = (JsonConverter<T>) JsonConverters.instance().find(object.getClass());
-            if (converter != null) {
-                return json(converter.convert(object), pretty);
-            } else {
-                throw new IllegalArgumentException("Cannot convert " + object.getClass() + " into a JSON string because it is missing a JsonConverter.");
-            }
-        }
+    public static<T> String stringify(T object, boolean pretty) {
+        return pretty ? SimpleJsonPrinter.pretty(JsonValue.from(object)) : SimpleJsonPrinter.minified(JsonValue.from(object));
+    }
+
+    /**
+     * Converts an object into a json string.
+     *
+     * @param object   The object to convert.
+     * @param pretty   Specifies if the output should be pretty printed or no.
+     * @param registry The JSON registry.
+     * @return         The parsed value.
+     */
+    public static<T> String stringify(T object, boolean pretty, JsonConverterRegistry registry) {
+        return pretty ? SimpleJsonPrinter.pretty(JsonValue.from(object, registry)) : SimpleJsonPrinter.minified(JsonValue.from(object, registry));
     }
 
     private Json() { }

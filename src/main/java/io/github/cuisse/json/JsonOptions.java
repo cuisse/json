@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 public final class JsonOptions {
 
     public static final JsonOptions NONE  = new JsonOptions(List.of());
-    public static final JsonOptions BASIC = new JsonOptions(List.of(new JsonOption("skipComments", true)));
+    public static final JsonOptions BASIC = new JsonOptions(List.of(
+        new JsonOption("skipComments", true)
+    ));
 
     private final Map<String, Object> options;
 

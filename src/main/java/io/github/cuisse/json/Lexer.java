@@ -1,10 +1,5 @@
 package io.github.cuisse.json;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-
 /**
  * A simple json lexer, also known as 'tokenizer'.
  *
@@ -12,29 +7,24 @@ import java.io.Reader;
  */
 public class Lexer {
 
-    private Reader reader;
+    private JsonReader reader;
     private JsonOptions options;
     private int line = 1;
     private int offset;
     private char current;
-    private char previous;
     private Token token;
-    private boolean eof;
-    private char[] buffer;
-    private int index;
-    private int total;
-    private TextBuilder builder;
+    private StringBuilder builder;
 
-    public Lexer(InputStream stream, JsonOptions options) {
-        if (stream == null) {
-            throw new NullPointerException("stream == null");
-        } else {
-            this.reader  = new InputStreamReader(stream);
-            this.options = options;
-            this.buffer  = new char[1024];
-            this.builder = new TextBuilder(512);
-            this.current = readChar();
-        }
+    private static final char EOF = (char) -1;
+
+    public Lexer() {
+        this.builder = new StringBuilder(512);
+    }
+
+    public void initialize(JsonReader stream, JsonOptions options) {
+        this.reader  = stream;
+        this.options = options;
+        this.current = reader.read();
     }
 
     /**
@@ -82,22 +72,10 @@ public class Lexer {
         while (current == ' ' || current == '\n' || current == '\t' || current == '\r') {
             consumeChar();
         }
-        if (eof) {
-            return Token.EOF;
-        }
-        if (current <= '9') {
-            if (current >= '0' || current == '-') {
-                return consumeNumber();
-            }
-        }
-        if (current == '/') {
-            consumeComment();
-            return next();
-        }
         return switch (current) {
-            case '{' -> consume(Token.OBJECT_OPEN);
             case '"' -> consumeString();
             case ':' -> consume(Token.COLON);
+            case '{' -> consume(Token.OBJECT_OPEN);
             case '[' -> consume(Token.ARRAY_OPEN);
             case ',' -> consume(Token.COMMA);
             case 't' -> consumeTrue();
@@ -105,6 +83,19 @@ public class Lexer {
             case 'n' -> consumeNull();
             case '}' -> consume(Token.OBJECT_CLOSE);
             case ']' -> consume(Token.ARRAY_CLOSE);
+            case '/' -> consumeComment();
+            case '0' -> consumeNumber();
+            case '1' -> consumeNumber();
+            case '2' -> consumeNumber();
+            case '3' -> consumeNumber();
+            case '4' -> consumeNumber();
+            case '5' -> consumeNumber();
+            case '6' -> consumeNumber();
+            case '7' -> consumeNumber();
+            case '8' -> consumeNumber();
+            case '9' -> consumeNumber();
+            case '-' -> consumeNumber();
+            case (char) -1 -> Token.EOF;
             default  -> throw new LexingException("Invalid token '" + current + "' at " + line + ":" + offset);
         };
     }
@@ -155,24 +146,24 @@ public class Lexer {
         throw new LexingException("Invalid token 'n" + current + "' at " + line + ":" + offset);
     }
 
-    private void consumeComment() {
+    private Token consumeComment() {
         if (options.get("skipComments", Boolean.class, () -> false) == false) {
-            throw new LexingException("Invalid comment token '/' at " + line + ":" + offset + ", maybe try again with 'skipComments' set to true?");
+            throw new LexingException("Invalid comment start '/' at " + line + ":" + offset + ". Maybe try again with 'skipComments' set to true?");
         }
-        consumeChar();
-        if (current == '/') {
+        consumeChar(); // '/'
+        if (current == '/') { // line comment
             consumeChar();
             while (current != '\n') {
                 consumeChar();
-                if (eof) {
-                    return;
+                if (reader.eof()) {
+                    return next();
                 }
             }
             consumeChar();
         } else {
-            if (current == '*') {
+            if (current == '*') { // block comment
                 while (true) {
-                    if (eof) {
+                    if (reader.eof()) {
                         throw new LexingException("Unexpected end of the file while in block comment at " + line + ":" + offset);
                     } else {
                         consumeChar();
@@ -180,20 +171,23 @@ public class Lexer {
                             consumeChar();
                             if (current == '/') {
                                 consumeChar();
-                                return;
+                                return next();
                             }
                         }
                     }
                 }
             }
         }
+        return next();
     }
 
     private Token consumeString() {
         consumeChar(); // "
         while (current != '"') {
-            if (eof) {
-                throw new LexingException("Unexpected end of file at " + line + ":" + offset);
+            if (current == EOF) {
+                if (reader.eof()) {
+                    throw new LexingException("Unexpected end of file while in string at " + line + ":" + offset);
+                }
             } else {
                 if (isocontrol(current)) {
                     throw new LexingException("Found invalid iso control value at " + line + ":" + offset + ".");
@@ -201,64 +195,53 @@ public class Lexer {
                 if (current == '\\') {
                     consumeChar();
                     if (current == 'n' || current == 'b' || current == 'f' || current == 'r' || current == 't' || current == '/' || current == '\\' || current == 'u' || current == '"') {
-                        builder.add('\\');
+                        builder.append('\\');
                     }
                 }
-                builder.add(current);
-                consumeChar();
             }
+            builder.append(current);
+            consumeChar();
         }
         consumeChar(); // "
         try {
             return new Token(TokenKind.STRING, builder.toString());
         } finally {
-            builder.reset();
+            builder.setLength(0);
         }
     }
 
     private Token consumeNumber() {
-        boolean integral = true;
-        boolean exponent = false;
-        boolean decimal  = false;
-        boolean isdigit  = false;
-        boolean matchexp = false;
-
-        while ((isdigit = digit(current)) || (decimal = current == '-' || current == '.' || (matchexp = (current == 'e' || current == 'E')) || current == '+')) {
-            if (decimal) {
-                if (integral) {
-                    integral = false;
-                }
-            }
-            if ((false == isdigit) && matchexp || current == '+' || current == '.') {
-                if (current == '.' || matchexp) {
-                    if (false == digit(previous)) {
-                        throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expecting digit (0-9). ");
-                    }
-                    if (matchexp) {
-                        if (exponent) {
-                            throw new LexingException("Invalid exponent declaration at " + line + ":" + offset);
-                        } else {
-                            exponent = true;
-                        }
-                    }
-                }
-                if (current == '+') {
-                    if (false == matchexp) {
-                        throw new LexingException("Unexpected value '" + current + "' at " + line + ":" + offset + ", expected 'e' or 'E'. ");
-                    }
-                }
-            }
-            builder.add(current);
-            previous = current;
-            consumeChar();
-        }
-        if (false == digit(previous)) {
-            throw new LexingException("Number did not end with a digit at " + line + ":" + offset);
-        }
         try {
-            return new Token(integral ? TokenKind.INTEGRAL : TokenKind.DECIMAL, builder.toString());
+            Token token = null;
+            match('-');
+
+            if (matchNumber()) {
+                if (match('.')) {
+                    if (matchNumber()) {
+                        if (match('E') || match('e')) {
+                            if (match('+') || match('-')) {
+                                if (matchNumber() == false) {
+                                    report("Expecting number at %d:%d");
+                                }
+                            } else {
+                                if (matchNumber() == false) {
+                                    report("Expecting number after 'E' or 'e' at %d:%d");
+                                }
+                            }
+                        }
+                    } else {
+                        report("Expecting number after dot (.)");
+                    }
+                   token = new Token(TokenKind.DECIMAL, builder.toString());
+                } else {
+                   token = new Token(TokenKind.INTEGRAL, builder.toString());
+                }
+            } else {
+                report("Expecting number at %d:%d");
+            }
+            return token;
         } finally {
-            builder.reset();
+            builder.setLength(0);
         }
     }
 
@@ -270,6 +253,26 @@ public class Lexer {
         return value >= '0' && value <= '9';
     }
 
+    private boolean match(char c) {
+        if (current == c) {
+            builder.append(current);
+            consumeChar();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean matchNumber() {
+        if (digit(current)) {
+            while (digit(current)) {
+                builder.append(current);
+                consumeChar();
+            }
+            return true;
+        }
+        return false;
+    }
+
     private void consumeChar() {
         if (current == '\n') {
             line++;
@@ -277,39 +280,18 @@ public class Lexer {
         } else {
             offset++;
         }
-        previous = current;
-        current  = readChar();
+        current  = reader.read();
     }
 
-    private char readChar() {
-        try {
-            if (total <= index) {
-                total = reader.read(buffer, 0, buffer.length);
-                if (total != -1) {
-                    index = 0;
-                } else {
-                    eof = true;
-                }
-            }
-            return eof ? (char) -1 : buffer[index++];
-        } catch (IOException error) {
-            throw new LexingException("Error while trying to read from the input. ", error);
-        }
+    private void report(String error) {
+        throw new LexingException(String.format(error, line, offset));
     }
 
     /**
      * Clean the resources hold by this lexer.
      */
     public void dispose() {
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (IOException ignored) { } finally {
-                reader  = null;
-                buffer  = null;
-                builder = null;
-            }
-        }
+        token = null;
     }
 
 }

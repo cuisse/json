@@ -1,20 +1,56 @@
 package io.github.cuisse.json;
 
-import java.io.InputStream;
 
 /**
  * @author Brayan Roman
  */
 public class Parser {
 
-    private Lexer lexer;
+    private static final Parser[] PARSERS = new Parser[5];
 
-    public Parser(String input, JsonOptions options) {
-        this.lexer = new Lexer(new StringInputStream(input), options);
+    static {
+        for (int i = 0; i < PARSERS.length; i++) {
+            PARSERS[i] = new Parser();
+        }
     }
 
-    public Parser(InputStream stream, JsonOptions options) {
-        this.lexer = new Lexer(stream, options);
+    public static Parser create() {
+        synchronized (PARSERS) {
+            for (int i = 0; i < PARSERS.length; i++) {
+                var parser = PARSERS[i];
+                if (parser != null) {
+                    PARSERS[i] = null;
+                    return parser;
+                }
+            }
+        }
+        return new Parser();
+    }
+
+    public static void dispose(Parser parser) {
+        synchronized (PARSERS) {
+            for (int i = 0; i < PARSERS.length; i++) {
+                if (PARSERS[i] == null) {
+                    PARSERS[i] = parser;
+                    return;
+                }
+            }
+        }
+    }
+
+    private Lexer lexer;
+    private JsonConverterRegistry registry;
+
+    public Parser() {
+        this.lexer = new Lexer();
+    }
+
+    public void initialize(JsonReader input, JsonOptions options, JsonConverterRegistry registry) {
+        if (input    == null) throw new ParsingException("input == null");
+        if (options  == null) throw new ParsingException("options == null");
+        if (registry == null) throw new ParsingException("registry == null");
+        this.registry = registry;
+        lexer.initialize(input, options);
     }
 
     /**
@@ -24,14 +60,16 @@ public class Parser {
      */
     public JsonValue parse() {
         try {
-            if (lexer.peek().kind() == TokenKind.ARRAY_OPEN || lexer.peek().kind() == TokenKind.OBJECT_OPEN) {
+            var kind = lexer.peek().kind();
+            if (kind == TokenKind.ARRAY_OPEN || kind == TokenKind.OBJECT_OPEN) {
                 return parse(lexer.consume());
             } else {
-                throw new ParsingException("Json cannot start with: " + lexer.peek().kind());
+                throw new ParsingException("Json cannot start with: " + kind);
             }
         } finally {
-            lexer.dispose();
-            lexer = null;
+            this.lexer.dispose();
+            this.registry = null;
+            Parser.dispose(this);
         }
     }
 
@@ -43,7 +81,7 @@ public class Parser {
      */
     @SuppressWarnings("unchecked")
     public<T> T parse(Class<T> target) {
-        var converter = JsonConverters.instance().find(target);
+        var converter = registry.find(target);
         if (converter != null) {
             if (lexer.peek().kind().accepts(converter.type())) {
                 return ((JsonConverter<T>) converter).convert(parse());
@@ -67,7 +105,7 @@ public class Parser {
             case TRUE        -> JsonBoolean.TRUE;
             case INTEGRAL    -> parseIntegral(token);
             case DECIMAL     -> parseDecimal(token);
-            case NULL        -> new JsonNull();
+            case NULL        -> JsonNull.NULL;
             default          -> throw new ParsingException("Unexpected token: " + token.kind());
         };
     }
@@ -77,6 +115,7 @@ public class Parser {
         while (lexer.peek().kind() != TokenKind.OBJECT_CLOSE) {
             Token key = consume(TokenKind.STRING);
             if (object.containsKey(key.value())) {
+                // TODO: Should this be an option?
                 throw new ParsingException("Duplicated key " + key.value() + " in object.");
             }
             consume(TokenKind.COLON);

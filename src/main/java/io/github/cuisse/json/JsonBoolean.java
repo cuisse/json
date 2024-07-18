@@ -19,7 +19,7 @@ public record JsonBoolean(boolean value) implements JsonValue, Comparable<JsonBo
 
     @Override
     public String toString() {
-        return Boolean.toString(value);
+        return SimpleJsonPrinter.pretty(this);
     }
 
 }

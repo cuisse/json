@@ -20,13 +20,14 @@ import java.util.function.BiPredicate;
  *          }
  *     """;
  *
- *     Validator validator = Validator.of(JsonType.OBJECT).fields(
+ *     Validator validator = Validator.of(JsonType.OBJECT).fields( // root object
  *                    Validator.of("entities", JsonType.OBJECT).fields(
  *                          Validator.of("spider", JsonType.OBJECT).fields(
- *                                  Validator.of("name", JsonType.STRING)
- *                                            .condition((value, current) -> value.string().equals("Lucas")),
- *                                   Validator.of("happiness", JsonType.NUMBER)
- *                                           .condition((value, current) -> value.decimal() > 50d))));
+ *                                  Validator.of("name", JsonType.STRING).condition((value, current) -> value.string().equals("Lucas")),
+ *                                  Validator.of("happiness", JsonType.NUMBER).condition((value, current) -> value.decimal() > 50d)
+ *                          )
+ *                    )
+ *     );
  *
  *     validator.validate(Json.parse(input));
  * 
@@ -38,8 +39,8 @@ import java.util.function.BiPredicate;
  * @param name       The name of the field this validator is targeting, you can leave empty (or null) for the root validator.
  * @param type       The type this validator is targeting.
  * @param required   Tell whether or no the field is required.
- * @param condition     An optional predicate to test extra attributes of the field, for example its value.
- * @param fields A list of validators to continue the sequence.
+ * @param condition  An optional predicate to test extra attributes of the field, for example its value.
+ * @param fields     A list of validators to continue the sequence.
  *
  */
 public record Validator(String name, JsonType type, boolean required, BiPredicate<JsonValue, Validator> condition, List<Validator> fields) {
@@ -107,7 +108,7 @@ public record Validator(String name, JsonType type, boolean required, BiPredicat
     /**
      * Validate the structure of a JSON value.
      *
-     * @param value                The JSON value to validate.
+     * @param value The JSON value to validate.
      * @throws JsonValidationException If anything in the validation has failed.
      */
     public void validate(JsonValue value) throws JsonValidationException {

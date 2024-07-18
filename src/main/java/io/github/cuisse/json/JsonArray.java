@@ -13,7 +13,15 @@ import java.util.function.Predicate;
  */
 public final class JsonArray implements JsonValue, List<JsonValue> {
 
-    private final List<JsonValue> values = new ArrayList<>();
+    private final List<JsonValue> values;
+
+    public JsonArray() {
+        this.values = new ArrayList<>();
+    }
+
+    public JsonArray(List<JsonValue> values) {
+        this.values = values;
+    }
 
     @Override
     public JsonType type() {
@@ -149,38 +157,8 @@ public final class JsonArray implements JsonValue, List<JsonValue> {
     }
 
     @Override
-    public String print(int depth) {
-        if (values.isEmpty()) {
-            return "[]";
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            values.forEach(val -> {
-                sb.append('\n');
-                sb.repeat(" ", depth + 1).append(val.print(depth + 2));
-                sb.append(',');
-            });
-            sb.replace(sb.length() - 1, sb.length(), "");
-            sb.append('\n').repeat(" ", depth).append(']');
-            return sb.toString();
-        }
-    }
-
-    @Override
     public String toString() {
-        if (values.isEmpty()) {
-            return "[]";
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            values.forEach(val -> {
-                sb.append(val.toString());
-                sb.append(',').append(' ');
-            });
-            sb.replace(sb.length() - 2, sb.length(), "");
-            sb.append(']');
-            return sb.toString();
-        }
+        return SimpleJsonPrinter.pretty(this);
     }
 
 }

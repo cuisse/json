@@ -27,7 +27,7 @@ public record JsonIntegral(long value) implements JsonValue, Comparable<JsonInte
 
     @Override
     public String toString() {
-        return Long.toString(value);
+        return SimpleJsonPrinter.pretty(this);
     }
 
 }

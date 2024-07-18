@@ -4,13 +4,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Brayan Roman
  */
 public final class JsonObject implements JsonValue, Map<String, JsonValue> {
 
-    private final Map<String, JsonValue> values = new HashMap<>();
+    private final Map<String, JsonValue> values;
+
+    public JsonObject() {
+        this.values = new HashMap<>();
+    }
+
+    public JsonObject(Map<String, JsonValue> values) {
+        this.values = values;
+    }
 
     @Override
     public JsonType type() {
@@ -40,6 +49,15 @@ public final class JsonObject implements JsonValue, Map<String, JsonValue> {
     @Override
     public JsonValue get(Object key) {
         return values.get(key);
+    }
+
+    @Override
+    public JsonValue getOrDefault(Object key, JsonValue defaultValue) {
+        return values.getOrDefault(key, defaultValue);
+    }
+
+    public JsonValue getOrDefault(Object key, Supplier<JsonValue> supplier) {
+        return values.getOrDefault(key, supplier.get());
     }
 
     @Override
@@ -78,39 +96,8 @@ public final class JsonObject implements JsonValue, Map<String, JsonValue> {
     }
 
     @Override
-    public String print(int depth) {
-        if (values.isEmpty()) {
-            return "{}";
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append('{');
-        values.forEach((key, val) -> {
-            sb.append('\n');
-            sb.repeat(" ", depth + 1).append('"').append(key).append('"').append(':').append(' ');
-            sb.append(val.print(depth + 2));
-            sb.append(',');
-        });
-        sb.replace(sb.length() - 1, sb.length(), "");
-        sb.append('\n').repeat(" ", depth).append('}');
-        return sb.toString();
-    }
-
-    @Override
     public String toString() {
-        if (values.isEmpty()) {
-            return "{}";
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append('{');
-            values.forEach((key, val) -> {
-                sb.append('"').append(key).append('"').append(':').append(' ');
-                sb.append(val.toString());
-                sb.append(',').append(' ');
-            });
-            sb.replace(sb.length() - 2, sb.length(), "");
-            sb.append('}');
-            return sb.toString();
-        }
+        return SimpleJsonPrinter.pretty(this);
     }
 
 }

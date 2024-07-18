@@ -18,7 +18,7 @@ public record JsonDecimal(double value) implements JsonValue, Comparable<JsonDec
 
     @Override
     public String toString() {
-        return Double.toString(value);
+        return SimpleJsonPrinter.pretty(this);
     }
 
 }

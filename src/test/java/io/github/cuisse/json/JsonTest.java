@@ -96,7 +96,7 @@ class JsonTest {
         """;
 
         assertEquals(8_045_311_447L,
-                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("population_2023").integral())
+                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("population_2023").integral64())
         );
     }
 
@@ -109,7 +109,7 @@ class JsonTest {
         """;
 
         assertEquals(Math.PI,
-                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("PI").decimal())
+                Assertions.assertDoesNotThrow(() -> Json.parse(input).object().get("PI").decimal64())
         );
     }
 
@@ -234,7 +234,7 @@ class JsonTest {
                                 Validator.of("name", JsonType.STRING)
                                         .condition((value, current) -> value.string().equals("Lucas")),
                                 Validator.of("happiness", JsonType.NUMBER)
-                                        .condition((value, current) -> value.decimal() > 50d))));
+                                        .condition((value, current) -> value.decimal64() > 50d))));
 
         Assertions.assertDoesNotThrow(() -> validator.validate(Json.parse(input)));
  
@@ -253,15 +253,34 @@ class JsonTest {
                      }
                 """;
 
-        Validator validator = Validator.of(JsonType.OBJECT).fields(
+        Validator validator = Validator.of(JsonType.OBJECT).fields( // root object
                 Validator.of("entities", JsonType.OBJECT).fields(
                         Validator.of("spider", JsonType.OBJECT).fields(
                                 Validator.of("name", JsonType.STRING)
                                         .condition((value, current) -> value.string().equals("Lucas")),
                                 Validator.of("happiness", JsonType.NUMBER)
-                                        .condition((value, current) -> value.decimal() > 50d))));
+                                        .condition((value, current) -> value.decimal64() > 50d))));
 
         Assertions.assertThrows(JsonValidationException.class, () -> validator.validate(Json.parse(input)));
+    }
+
+    @Test
+    void shouldParseComplexNumbers() {
+        String input = """
+            {
+                "complex1": 3.14e-2,
+                "complex2": 3.14e2,
+                "complex3": 3.14e+2,
+            }
+        """;
+
+        JsonObject object = Json.parse(input).object();
+
+        assertAll(
+                () -> assertEquals(3.14e-2, object.get("complex1").decimal64()),
+                () -> assertEquals(3.14e2, object.get("complex2").decimal64()),
+                () -> assertEquals(3.14e+2, object.get("complex3").decimal64())
+        );
     }
 
 }
