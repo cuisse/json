@@ -31,7 +31,7 @@ JsonObject object = Json.parse(input).object();
 You can pretty print the object using:
 
 ```java
-System.out.println(object.print());
+System.out.println(Json.stringify(object, true));
 ```
 
 Outputs
@@ -60,9 +60,9 @@ for (JsonValue todo : todos) {
 }
 
 // Accessing other values 
-double pi  = object.get("PI").decimal(); // 3.141592653589793
+double pi  = object.get("PI").decimal64(); // 3.141592653589793
 String key = object.get("key").string(); // "value"
-long   mn  = object.get("magic-number").integral(); // 26
+long   mn  = object.get("magic-number").integral64(); // 26
 ```
 
 Parsing an array is as simple as parsing an object.
@@ -75,7 +75,7 @@ String input = "[5, 5.5, {}, \"Hello world\", false, true, null, []]";
 
 JsonArray array = Json.parse(input).array();
 
-System.out.println(array.print());
+System.out.println(Json.stringify(array, true));
 ```
 
 Outputs:
@@ -142,9 +142,17 @@ class ItemJsonConverter implements JsonConverter<Item> {
 Remember to register it, so the library can use it.
 
 ```java
-import io.github.cuisse.json.JsonConverters;
+import io.github.cuisse.json.JsonConverterRegistry;
 
-JsonConverters.register(Item.class, new ItemJsonConverter());
+JsonConverterRegistry.instance().register(Item.class, new ItemJsonConverter());
+```
+
+You can also change the registry to use a custom one.
+
+```java
+import io.github.cuisse.json.JsonConverterRegistry;
+
+JsonConverterRegistry.instance(new CustomJsonConverterRegistry());
 ```
 
 Done. Now we are ready to start working with it.
@@ -161,7 +169,7 @@ String input = """
 """;
 
 Item   item = Json.parse(input, Item.class);
-String json = Json.json(item, true); // convert it back to a pretty printed json string
+String json = Json.stringify(item, true); // convert it back to a pretty printed json string
 ```
 
 ### Data Validation 
