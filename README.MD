@@ -172,6 +172,12 @@ Item   item = Json.parse(input, Item.class);
 String json = Json.stringify(item, true); // convert it back to a pretty printed json string
 ```
 
+You can also use something like this:
+  
+  ```java
+  Item item = Json.parse(input).as(Item.class);
+  ```
+
 ### Data Validation 
 We also have the option to validate our data before processing it. Let's take the previous converter as an example.
 
@@ -239,6 +245,27 @@ class ItemJsonConverter implements JsonConverter<Item> {
                value.decimal() > 0.00d;
     }
 
+}
+```
+
+### Exceptions
+You can also catch exceptions when parsing a JSON string.
+
+```java
+import io.github.cuisse.json.Json;
+import io.github.cuisse.json.JsonObject;
+import io.github.cuisse.json.JsonException;
+
+String input = """
+{
+  "incomplete_array": [1, 2, 3
+}
+""";
+
+try {
+    JsonObject object = Json.parse(input).object();
+} catch (JsonException error) {
+    error.printStackTrace(); // ParsingException: Expecting TokenKind.ARRAY_CLOSE but got TokenKind.OBJECT_CLOSE
 }
 ```
 
